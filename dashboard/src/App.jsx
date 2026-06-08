@@ -86,7 +86,10 @@ function App() {
 
   return (
     <div className="page">
-      <h1>dotWatch IoT Dashboard</h1>
+      <div className="header">
+  <h1>dotWatch IoT Dashboard</h1>
+  <p className="subtitle">Realtime monitoring and device control</p>
+</div>
 
       <div className="grid">
         <div className="card">
@@ -100,9 +103,11 @@ function App() {
         </div>
 
         <div className="card">
-          <p>Status</p>
-          <h2>{sensor.status}</h2>
-        </div>
+  <p>Status</p>
+  <h2 className={sensor.status === "online" ? "status-online" : "status-offline"}>
+    {sensor.status}
+  </h2>
+</div>
 
         {Object.keys(relays).map((relayName, index) => (
           <div className="card" key={relayName}>
