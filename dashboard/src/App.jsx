@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
 import { ref, onValue, set } from "firebase/database";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { database } from "./firebase";
 import "./App.css";
 
@@ -17,6 +26,8 @@ function App() {
     relay4: false,
   });
 
+  const [chartData, setChartData] = useState([]);
+
   useEffect(() => {
     const sensorRef = ref(database, "sensor");
 
@@ -28,6 +39,21 @@ function App() {
           temperature: data.temperature ?? "-",
           humidity: data.humidity ?? "-",
           status: data.status ?? "-",
+        });
+
+        const now = new Date().toLocaleTimeString();
+
+        setChartData((prev) => {
+          const newData = [
+            ...prev,
+            {
+              time: now,
+              temperature: Number(data.temperature) || 0,
+              humidity: Number(data.humidity) || 0,
+            },
+          ];
+
+          return newData.slice(-10);
         });
       }
     });
@@ -89,6 +115,33 @@ function App() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="chart-card">
+        <h2>Temperature & Humidity Realtime Chart</h2>
+
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="time" />
+            <YAxis />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="temperature"
+              stroke="#ef4444"
+              strokeWidth={3}
+              name="Temperature °C"
+            />
+            <Line
+              type="monotone"
+              dataKey="humidity"
+              stroke="#3b82f6"
+              strokeWidth={3}
+              name="Humidity %"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
