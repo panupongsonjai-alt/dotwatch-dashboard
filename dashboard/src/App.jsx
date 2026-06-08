@@ -10,12 +10,17 @@ function App() {
     status: "-",
   });
 
-  const [relay1, setRelay1] = useState(false);
+  const [relays, setRelays] = useState({
+    relay1: false,
+    relay2: false,
+    relay3: false,
+    relay4: false,
+  });
 
   useEffect(() => {
     const sensorRef = ref(database, "sensor");
 
-    const unsubscribe = onValue(sensorRef, (snapshot) => {
+    const unsubscribeSensor = onValue(sensorRef, (snapshot) => {
       const data = snapshot.val();
 
       if (data) {
@@ -27,13 +32,30 @@ function App() {
       }
     });
 
-    return () => unsubscribe();
+    const controlRef = ref(database, "control");
+
+    const unsubscribeControl = onValue(controlRef, (snapshot) => {
+      const data = snapshot.val();
+
+      if (data) {
+        setRelays({
+          relay1: data.relay1 === true,
+          relay2: data.relay2 === true,
+          relay3: data.relay3 === true,
+          relay4: data.relay4 === true,
+        });
+      }
+    });
+
+    return () => {
+      unsubscribeSensor();
+      unsubscribeControl();
+    };
   }, []);
 
-  const toggleRelay = async () => {
-    const newState = !relay1;
-    setRelay1(newState);
-    await set(ref(database, "control/relay1"), newState);
+  const toggleRelay = async (relayName) => {
+    const newState = !relays[relayName];
+    await set(ref(database, `control/${relayName}`), newState);
   };
 
   return (
@@ -56,12 +78,17 @@ function App() {
           <h2>{sensor.status}</h2>
         </div>
 
-        <div className="card">
-          <p>Relay 1</p>
-          <button onClick={toggleRelay}>
-            {relay1 ? "ON" : "OFF"}
-          </button>
-        </div>
+        {Object.keys(relays).map((relayName, index) => (
+          <div className="card" key={relayName}>
+            <p>Relay {index + 1}</p>
+            <button
+              className={relays[relayName] ? "btn-on" : "btn-off"}
+              onClick={() => toggleRelay(relayName)}
+            >
+              {relays[relayName] ? "ON" : "OFF"}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );
